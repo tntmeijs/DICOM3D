@@ -2,6 +2,8 @@
 #include <gl/gl3w.h>
 #include <glfw/glfw3.h>
 
+#include "core/window.hpp"
+
 constexpr int VERSION_MAJOR = 4;
 constexpr int VERSION_MINOR = 6;
 constexpr int DEFAULT_WINDOW_WIDTH = 1280;
@@ -14,16 +16,8 @@ int main()
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, VERSION_MINOR);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-	GLFWwindow* window = glfwCreateWindow(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT, "DICOM3D", nullptr, nullptr);
-	
-	if (!window)
-	{
-		std::cout << "Failed to create GLFW window" << std::endl;
-		glfwTerminate();
-		return -1;
-	}
-
-	glfwMakeContextCurrent(window);
+	dcm::DCMWindow window;
+	window.Create(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT, "DICOM3D");
 
 	if (gl3wInit())
 	{
@@ -39,9 +33,22 @@ int main()
 		return -1;
 	}
 
-	std::cout << "OpenGL " << glGetString(GL_VERSION) << ", GLSL " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
+	window.on_keyboard_input = [&window](int key, int action)
+	{
+		// Exit the window when escape is pressed
+		if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+		{
+			window.StopRunning();
+		}
+	};
 
-	std::cin.get();
+	// Main loop
+	while (window.IsRunning())
+	{
+		window.NextFrame();
+	}
+
+	glfwTerminate();
 
     return 0;
 }
