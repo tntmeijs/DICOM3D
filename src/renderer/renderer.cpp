@@ -39,10 +39,15 @@ void dcm::DCMRenderer::Initialize(int initial_width, int initial_height, int gl_
 		glfwTerminate();
 		return;
 	}
+
+	// Configure OpenGL
+	glViewport(0, 0, m_width, m_height);
+	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
-void dcm::DCMRenderer::Render() const
+void dcm::DCMRenderer::DrawFrame() const
 {
+	glClear(GL_COLOR_BUFFER_BIT);
 }
 
 void dcm::DCMRenderer::CleanUp()

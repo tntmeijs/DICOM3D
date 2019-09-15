@@ -29,7 +29,7 @@ namespace dcm
 		/**
 		 * Render the scene
 		 */
-		void Render() const;
+		void DrawFrame() const;
 
 		/**
 		 * Clean-up resources

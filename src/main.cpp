@@ -35,8 +35,11 @@ int main()
 	// Main loop
 	while (window.IsRunning())
 	{
+		renderer.DrawFrame();
 		window.NextFrame();
 	}
+
+	renderer.CleanUp();
 
 	glfwTerminate();
 
