@@ -14,6 +14,11 @@ target_include_directories(gl3w PRIVATE gl3w/include)
 target_link_libraries(${PROJECT_NAME} gl3w)
 target_include_directories(${PROJECT_NAME} PRIVATE gl3w/include)
 
+# Spdlog
+add_subdirectory(spdlog)
+target_link_libraries(${PROJECT_NAME} spdlog)
+target_include_directories(${PROJECT_NAME} PRIVATE spdlog)
+
 # Group the generated third-party projects
 if(MSVC)
     # GLFW
@@ -21,4 +26,7 @@ if(MSVC)
 
     # GL3W
     set_target_properties(gl3w PROPERTIES FOLDER dependencies)
+
+    # Spdlog
+    set_target_properties(spdlog PROPERTIES FOLDER dependencies)
 endif(MSVC)
