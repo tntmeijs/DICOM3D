@@ -4,8 +4,12 @@ set(CORE_SOURCES
     core/window.cpp
     core/window.hpp)
 
+set(RENDERER_SOURCES
+    renderer/renderer.cpp
+    renderer/renderer.hpp)
+
 # Create the executable
-add_executable(${PROJECT_NAME} ${MAIN_SOURCES} ${CORE_SOURCES})
+add_executable(${PROJECT_NAME} ${MAIN_SOURCES} ${CORE_SOURCES} ${RENDERER_SOURCES})
 
 # Use C++ 17
 set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED YES CXX_EXTENSIONS NO)
@@ -15,6 +19,7 @@ if(MSVC)
     # Use groups to keep files structured nicely
     source_group("main" FILES ${MAIN_SOURCES})
     source_group("core" FILES ${CORE_SOURCES})
+    source_group("renderer" FILES ${RENDERER_SOURCES})
 
     # Maximum warning level and treat warnings as errors
     target_compile_options(${PROJECT_NAME} PRIVATE /W4 /WX)

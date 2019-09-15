@@ -2,7 +2,11 @@
 #include <gl/gl3w.h>
 #include <glfw/glfw3.h>
 
+// Core
 #include "core/window.hpp"
+
+// Renderer
+#include "renderer/renderer.hpp"
 
 constexpr int VERSION_MAJOR = 4;
 constexpr int VERSION_MINOR = 6;
@@ -11,27 +15,13 @@ constexpr int DEFAULT_WINDOW_HEIGHT = 720;
 
 int main()
 {
-	glfwInit();
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, VERSION_MAJOR);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, VERSION_MINOR);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
+	dcm::DCMRenderer renderer;
 	dcm::DCMWindow window;
+
+	glfwInit();
+
 	window.Create(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT, "DICOM3D");
-
-	if (gl3wInit())
-	{
-		std::cout << "Failed to initialize GL3W" << std::endl;
-		glfwTerminate();
-		return -1;
-	}
-
-	if (!gl3wIsSupported(4, 6))
-	{
-		std::cout << "OpenGL " << VERSION_MAJOR << "." << VERSION_MINOR << " not supported." << std::endl;
-		glfwTerminate();
-		return -1;
-	}
+	renderer.Initialize(DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT, VERSION_MAJOR, VERSION_MINOR);
 
 	window.on_keyboard_input = [&window](int key, int action)
 	{
@@ -45,8 +35,11 @@ int main()
 	// Main loop
 	while (window.IsRunning())
 	{
+		renderer.DrawFrame();
 		window.NextFrame();
 	}
+
+	renderer.CleanUp();
 
 	glfwTerminate();
 
