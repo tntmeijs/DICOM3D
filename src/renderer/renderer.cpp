@@ -53,6 +53,10 @@ void dcm::DCMRenderer::Initialize(int initial_width, int initial_height, int gl_
 void dcm::DCMRenderer::DrawFrame() const
 {
 	glClear(GL_COLOR_BUFFER_BIT);
+
+	// Render a fullscreen triangle
+	m_volumetric_shader.Use();
+	glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
 void dcm::DCMRenderer::CleanUp()
