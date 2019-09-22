@@ -46,8 +46,8 @@ void dcm::DCMRenderer::Initialize(int initial_width, int initial_height, int gl_
 	glViewport(0, 0, m_width, m_height);
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
-	// Create the ray-marching shader
-	m_volumetric_shader.Create({ "./resources/shaders/volumetric.vs", "./resources/shaders/volumetric.fs" });
+	// Create the full-screen output shader
+	m_fullscreen_triangle_shader.Create({ "./resources/shaders/fullscreen_triangle.vs", "./resources/shaders/fullscreen_triangle.fs" });
 }
 
 void dcm::DCMRenderer::DrawFrame() const
@@ -55,11 +55,11 @@ void dcm::DCMRenderer::DrawFrame() const
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	// Render a fullscreen triangle
-	m_volumetric_shader.Use();
+	m_fullscreen_triangle_shader.Use();
 	glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
 void dcm::DCMRenderer::CleanUp()
 {
-	m_volumetric_shader.Destroy();
+	m_fullscreen_triangle_shader.Destroy();
 }

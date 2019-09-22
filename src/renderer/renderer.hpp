@@ -44,7 +44,7 @@ namespace dcm
 		int m_width;
 		int m_height;
 
-		DCMGLShader m_volumetric_shader;
+		DCMGLShader m_fullscreen_triangle_shader;
 	};
 }
 
