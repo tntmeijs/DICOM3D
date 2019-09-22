@@ -1,5 +1,7 @@
 #include "renderer.hpp"
 
+#include "gl_shader.hpp"
+
 dcm::DCMRenderer::DCMRenderer() :
 	m_gl_major(0),
 	m_gl_minor(0),
@@ -43,6 +45,9 @@ void dcm::DCMRenderer::Initialize(int initial_width, int initial_height, int gl_
 	// Configure OpenGL
 	glViewport(0, 0, m_width, m_height);
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+	// Create the ray-marching shader
+	m_volumetric_shader.Create({ "./resources/shaders/volumetric.vs", "./resources/shaders/volumetric.fs" });
 }
 
 void dcm::DCMRenderer::DrawFrame() const
@@ -52,4 +57,5 @@ void dcm::DCMRenderer::DrawFrame() const
 
 void dcm::DCMRenderer::CleanUp()
 {
+	m_volumetric_shader.Destroy();
 }

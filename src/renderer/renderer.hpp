@@ -1,6 +1,8 @@
 #ifndef DICOM3D_RENDERER_HPP
 #define DICOM3D_RENDERER_HPP
 
+#include "gl_shader.hpp"
+
 // Spdlog
 #include "spdlog/spdlog.h"
 
@@ -41,6 +43,8 @@ namespace dcm
 		int m_gl_minor;
 		int m_width;
 		int m_height;
+
+		DCMGLShader m_volumetric_shader;
 	};
 }
 
