@@ -15,6 +15,7 @@ dcm::DCMGLShader::DCMGLShader() :
 
 dcm::DCMGLShader::~DCMGLShader()
 {
+	Destroy();
 }
 
 void dcm::DCMGLShader::Create(const std::vector<std::string_view>& shader_sources)
@@ -48,6 +49,11 @@ void dcm::DCMGLShader::Create(const std::vector<std::string_view>& shader_source
 void dcm::DCMGLShader::Use() const
 {
 	glUseProgram(m_program_handle);
+}
+
+GLuint dcm::DCMGLShader::Handle() const
+{
+	return m_program_handle;
 }
 
 void dcm::DCMGLShader::Destroy()

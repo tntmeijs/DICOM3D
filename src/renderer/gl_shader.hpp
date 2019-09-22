@@ -43,6 +43,11 @@ namespace dcm
 		void Use() const;
 
 		/**
+		 * Get the shader program handle
+		 */
+		GLuint Handle() const;
+
+		/**
 		 * Delete the shader program
 		 */
 		void Destroy();

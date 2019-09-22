@@ -9,9 +9,6 @@
 // GL3W
 #include <gl/gl3w.h>
 
-// GLFW
-#include <glfw/glfw3.h>
-
 namespace dcm
 {
 	/**
@@ -44,6 +41,11 @@ namespace dcm
 		int m_width;
 		int m_height;
 
+		// Temporary: handle to the compute shader output texture
+		GLuint m_volumetric_output_texture;
+		GLuint m_dummy_vao;
+
+		DCMGLShader m_volumetric_shader;
 		DCMGLShader m_fullscreen_triangle_shader;
 	};
 }
