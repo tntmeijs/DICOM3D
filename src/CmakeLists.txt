@@ -9,8 +9,11 @@ set(RENDERER_SOURCES
     renderer/renderer.hpp)
 
 set(OPENGL_SOURCES
+    renderer/gl_format.hpp
     renderer/gl_shader.cpp
-    renderer/gl_shader.hpp)
+    renderer/gl_shader.hpp
+    renderer/gl_texture_2d.cpp
+    renderer/gl_texture_2d.hpp)
 
 # Create the executable
 add_executable(${PROJECT_NAME} ${MAIN_SOURCES} ${CORE_SOURCES} ${RENDERER_SOURCES} ${OPENGL_SOURCES})

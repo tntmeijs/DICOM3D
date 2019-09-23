@@ -2,6 +2,7 @@
 #define DICOM3D_RENDERER_HPP
 
 #include "gl_shader.hpp"
+#include "gl_texture_2d.hpp"
 
 // Spdlog
 #include "spdlog/spdlog.h"
@@ -41,8 +42,10 @@ namespace dcm
 		int m_width;
 		int m_height;
 
-		// Temporary: handle to the compute shader output texture
-		GLuint m_volumetric_output_texture;
+		// Compute shader output texture
+		DCMGLTexture2D m_volumetric_output_texture;
+
+		// Dummy VAO needed to make the "fullscreen triangle without buffers" trick work
 		GLuint m_dummy_vao;
 
 		DCMGLShader m_volumetric_shader;
