@@ -17,7 +17,7 @@ dcm::DCMGLTexture3D::~DCMGLTexture3D()
 	Destroy();
 }
 
-void dcm::DCMGLTexture3D::CreateTextureFromSlices(const DCMGLTexture3DInfo& create_info)
+void dcm::DCMGLTexture3D::CreateTextureFromImageSlices(const DCMGLTexture3DInfo& create_info)
 {
 	if (0 == create_info.paths.size())
 	{

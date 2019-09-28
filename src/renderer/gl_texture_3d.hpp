@@ -45,7 +45,7 @@ namespace dcm
 		/**
 		 * Create a new 3D texture from 2D images
 		 */
-		void CreateTextureFromSlices(const DCMGLTexture3DInfo& create_info);
+		void CreateTextureFromImageSlices(const DCMGLTexture3DInfo& create_info);
 
 		/**
 		 * Bind the texture to GL_TEXTURE_3D (does not active a texture slot)
