@@ -7,6 +7,7 @@
 #include <GL/gl3w.h>
 
 // C++ standard
+#include <optional>
 #include <string_view>
 
 namespace dcm
@@ -51,8 +52,8 @@ namespace dcm
 	 */
 	struct DCMGLTexture2DInfo
 	{
-		// Texture data
-		const void* data = nullptr;
+		// Texture path (if nullopt, an empty texture will be allocated --> perfect for compute output)
+		std::optional<std::string_view> path;
 		
 		// Texture internal format
 		DCMGLFormat format = DCMGLFormat::RGBA;
@@ -60,9 +61,9 @@ namespace dcm
 		// Pixel data format
 		DCMGLTextureDataFormat data_format = DCMGLTextureDataFormat::UByte;
 
-		// Texture dimensions
-		std::uint32_t width = 0;
-		std::uint32_t height = 0;
+		// Texture dimensions (leave at zero if a path is specified)
+		int width = 0;
+		int height = 0;
 
 		// Wrap modes
 		DCMGLTextureWrapMode wrap_s = DCMGLTextureWrapMode::ClampToBorder;
@@ -85,7 +86,7 @@ namespace dcm
 		/**
 		 * Create a new texture
 		 */
-		void CreateTexture(const DCMGLTexture2DInfo& create_info);
+		void CreateTexture(DCMGLTexture2DInfo& create_info);
 
 		/**
 		 * Bind the texture to GL_TEXTURE_2D (does not active a texture slot)
