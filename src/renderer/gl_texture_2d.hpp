@@ -21,7 +21,7 @@ namespace dcm
 		std::optional<std::string_view> path;
 		
 		// Texture internal format
-		DCMGLFormat format = DCMGLFormat::RGBA;
+		DCMGLTextureChannelFormat format = DCMGLTextureChannelFormat::RGBA;
 
 		// Pixel data format
 		DCMGLTextureDataFormat data_format = DCMGLTextureDataFormat::UByte;

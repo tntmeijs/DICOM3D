@@ -4,6 +4,9 @@
 // OpenGL
 #include <GL/gl3w.h>
 
+// C++ standard
+#include <cstdint>
+
 namespace dcm
 {
 	/**
@@ -27,7 +30,7 @@ namespace dcm
 	};
 
 	/**
-	 * Texture data format
+	 * Texture pixel data format
 	 */
 	enum class DCMGLTextureDataFormat
 	{
@@ -41,7 +44,7 @@ namespace dcm
 		Float = GL_FLOAT,
 	};
 
-	enum class DCMGLFormat
+	enum class DCMGLTextureChannelFormat
 	{
 		// Base OpenGL internal formats
 		R = GL_RED,
@@ -79,44 +82,44 @@ namespace dcm
 	/**
 	 * Sized format to base OpenGL format
 	 */
-	static constexpr DCMGLFormat SizedFormatToBaseFormat(DCMGLFormat format)
+	static constexpr DCMGLTextureChannelFormat SizedFormatToBaseFormat(DCMGLTextureChannelFormat channel_format)
 	{
-		switch (format)
+		switch (channel_format)
 		{
-		case dcm::DCMGLFormat::R8:
-		case dcm::DCMGLFormat::R16:
-		case dcm::DCMGLFormat::R8_SNORM:
-		case dcm::DCMGLFormat::R16_SNORM:
-		case dcm::DCMGLFormat::R16F:
-		case dcm::DCMGLFormat::R32F:
+		case dcm::DCMGLTextureChannelFormat::R8:
+		case dcm::DCMGLTextureChannelFormat::R16:
+		case dcm::DCMGLTextureChannelFormat::R8_SNORM:
+		case dcm::DCMGLTextureChannelFormat::R16_SNORM:
+		case dcm::DCMGLTextureChannelFormat::R16F:
+		case dcm::DCMGLTextureChannelFormat::R32F:
 		{
-			return DCMGLFormat::R;
+			return DCMGLTextureChannelFormat::R;
 		} break;
 
-		case dcm::DCMGLFormat::RG8:
-		case dcm::DCMGLFormat::RG16:
-		case dcm::DCMGLFormat::RG8_SNORM:
-		case dcm::DCMGLFormat::RG16_SNORM:
-		case dcm::DCMGLFormat::RG16F:
-		case dcm::DCMGLFormat::RG32F:
+		case dcm::DCMGLTextureChannelFormat::RG8:
+		case dcm::DCMGLTextureChannelFormat::RG16:
+		case dcm::DCMGLTextureChannelFormat::RG8_SNORM:
+		case dcm::DCMGLTextureChannelFormat::RG16_SNORM:
+		case dcm::DCMGLTextureChannelFormat::RG16F:
+		case dcm::DCMGLTextureChannelFormat::RG32F:
 		{
-			return DCMGLFormat::RG;
+			return DCMGLTextureChannelFormat::RG;
 		} break;
 		
-		case dcm::DCMGLFormat::RGB8:
-		case dcm::DCMGLFormat::RGB16:
-		case dcm::DCMGLFormat::RGB8_SNORM:
-		case dcm::DCMGLFormat::RGB16_SNORM:
-		case dcm::DCMGLFormat::RGB16F:
-		case dcm::DCMGLFormat::RGB32F:
+		case dcm::DCMGLTextureChannelFormat::RGB8:
+		case dcm::DCMGLTextureChannelFormat::RGB16:
+		case dcm::DCMGLTextureChannelFormat::RGB8_SNORM:
+		case dcm::DCMGLTextureChannelFormat::RGB16_SNORM:
+		case dcm::DCMGLTextureChannelFormat::RGB16F:
+		case dcm::DCMGLTextureChannelFormat::RGB32F:
 		{
-			return DCMGLFormat::RGB;
+			return DCMGLTextureChannelFormat::RGB;
 		} break;
 
-		case dcm::DCMGLFormat::RGBA16F:
-		case dcm::DCMGLFormat::RGBA32F:
+		case dcm::DCMGLTextureChannelFormat::RGBA16F:
+		case dcm::DCMGLTextureChannelFormat::RGBA32F:
 		{
-			return DCMGLFormat::RGBA;
+			return DCMGLTextureChannelFormat::RGBA;
 		} break;
 
 		default:
@@ -124,7 +127,84 @@ namespace dcm
 		}
 
 		// No base format found, just pass the input as the output
-		return format;
+		return channel_format;
+	}
+
+	/**
+	 * Number of bytes per pixel
+	 */
+	static constexpr std::uint32_t DCMGLFormatToBytesPerPixel(DCMGLTextureChannelFormat channel_format, DCMGLTextureDataFormat data_format)
+	{
+		DCMGLTextureChannelFormat channel_type = SizedFormatToBaseFormat(channel_format);
+
+		std::uint32_t channels_per_pixel = 1;
+		std::uint32_t bytes_per_channel = 1;
+
+		// Number of channels per pixel
+		switch (channel_type)
+		{
+		
+		case dcm::DCMGLTextureChannelFormat::R:
+		{
+			channels_per_pixel = 1;
+		} break;
+		
+		case dcm::DCMGLTextureChannelFormat::RG:
+		{
+			channels_per_pixel = 2;
+		} break;
+		
+		case dcm::DCMGLTextureChannelFormat::RGB:
+		{
+			channels_per_pixel = 3;
+		} break;
+		
+		case dcm::DCMGLTextureChannelFormat::RGBA:
+		{
+			channels_per_pixel = 4;
+		} break;
+		
+		default:
+			break;
+		}
+
+		// Size of a data format in bytes
+		switch (data_format)
+		{
+		case dcm::DCMGLTextureDataFormat::UByte:
+		case dcm::DCMGLTextureDataFormat::Byte:
+		{
+			bytes_per_channel = 1;
+		} break;
+
+		case dcm::DCMGLTextureDataFormat::UShort:
+		case dcm::DCMGLTextureDataFormat::Short:
+		{
+			bytes_per_channel = 2;
+		} break;
+		
+		case dcm::DCMGLTextureDataFormat::UInt:
+		case dcm::DCMGLTextureDataFormat::Int:
+		{
+			bytes_per_channel = 4;
+		} break;
+		
+		case dcm::DCMGLTextureDataFormat::Float16:
+		{
+			bytes_per_channel = 2;
+		} break;
+		
+		case dcm::DCMGLTextureDataFormat::Float:
+		{
+			bytes_per_channel = 4;
+		} break;
+		
+		default:
+			break;
+		}
+
+		// Total bytes per pixel = channel count * bytes per channel
+		return channels_per_pixel * bytes_per_channel;
 	}
 }
 

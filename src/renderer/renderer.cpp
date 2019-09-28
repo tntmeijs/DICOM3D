@@ -52,7 +52,7 @@ void dcm::DCMRenderer::Initialize(int initial_width, int initial_height, int gl_
 	{
 		DCMGLTexture2DInfo create_info = {};
 		create_info.data_format = DCMGLTextureDataFormat::Float;
-		create_info.format = DCMGLFormat::RGBA32F;
+		create_info.format = DCMGLTextureChannelFormat::RGBA32F;
 		create_info.width = initial_width;
 		create_info.height = initial_height;
 
