@@ -47,7 +47,7 @@ void dcm::DCMGLTexture2D::CreateTexture(DCMGLTexture2DInfo& create_info)
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	// Free any image data
-	if (!data)
+	if (data)
 	{
 		stbi_image_free(&data);
 	}

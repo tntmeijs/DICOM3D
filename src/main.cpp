@@ -2,6 +2,9 @@
 #include <gl/gl3w.h>
 #include <glfw/glfw3.h>
 
+// Make STB files work
+#include "stb_defines.hpp"
+
 // Core
 #include "core/window.hpp"
 

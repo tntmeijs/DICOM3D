@@ -6,6 +6,41 @@
 
 namespace dcm
 {
+	/**
+	 * Texture wrap modes
+	 */
+	enum class DCMGLTextureWrapMode
+	{
+		Repeat = GL_REPEAT,
+		MirroredRepeat = GL_MIRRORED_REPEAT,
+		ClampToEdge = GL_CLAMP_TO_EDGE,
+		ClampToBorder = GL_CLAMP_TO_BORDER
+	};
+
+	/**
+	 * Texture filtering modes
+	 */
+	enum class DCMGLTextureFilterMode
+	{
+		Nearest = GL_NEAREST,
+		Linear = GL_LINEAR
+	};
+
+	/**
+	 * Texture data format
+	 */
+	enum class DCMGLTextureDataFormat
+	{
+		UByte = GL_UNSIGNED_BYTE,
+		Byte = GL_BYTE,
+		UShort = GL_UNSIGNED_SHORT,
+		Short = GL_SHORT,
+		UInt = GL_UNSIGNED_INT,
+		Int = GL_INT,
+		Float16 = GL_HALF_FLOAT,
+		Float = GL_FLOAT,
+	};
+
 	enum class DCMGLFormat
 	{
 		// Base OpenGL internal formats

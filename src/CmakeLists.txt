@@ -1,4 +1,4 @@
-set(MAIN_SOURCES main.cpp)
+set(MAIN_SOURCES main.cpp stb_defines.hpp)
 
 set(CORE_SOURCES
     core/window.cpp
