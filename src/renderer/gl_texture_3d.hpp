@@ -23,11 +23,14 @@ namespace dcm
 		// Height of a single slice in pixels
 		int slice_height = 0;
 
-		// Data types used in the channels per pixel
-		DCMGLTextureDataFormat data_format;
+		// Internal texture GL format
+		GLint internal_format;
 
-		// Channels used per pixel
-		DCMGLTextureChannelFormat channel_format;
+		// Texture GL format
+		GLenum format;
+
+		// Pixel data type
+		GLenum type;
 
 		// Paths to each slice
 		std::vector<std::string_view> paths;
@@ -46,6 +49,11 @@ namespace dcm
 		 * Create a new 3D texture from 2D images
 		 */
 		void CreateTextureFromImageSlices(const DCMGLTexture3DInfo& create_info);
+
+		/**
+		 * Create a new 3D texture from 2D slices (binary data files, no headers, just data)
+		 */
+		void CreateTextureFromDataSlices(const DCMGLTexture3DInfo& create_info);
 
 		/**
 		 * Bind the texture to GL_TEXTURE_3D (does not active a texture slot)

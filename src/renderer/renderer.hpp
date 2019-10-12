@@ -3,6 +3,7 @@
 
 #include "gl_shader.hpp"
 #include "gl_texture_2d.hpp"
+#include "gl_texture_3d.hpp"
 
 // Spdlog
 #include "spdlog/spdlog.h"
@@ -44,6 +45,9 @@ namespace dcm
 
 		// Compute shader output texture
 		DCMGLTexture2D m_volumetric_output_texture;
+
+		// DEBUG: test a volumetric texture
+		DCMGLTexture3D m_volumetric_texture_test;
 
 		// Dummy VAO needed to make the "fullscreen triangle without buffers" trick work
 		GLuint m_dummy_vao;

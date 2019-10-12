@@ -20,11 +20,14 @@ namespace dcm
 		// Texture path (if nullopt, an empty texture will be allocated --> perfect for compute output)
 		std::optional<std::string_view> path;
 		
-		// Texture internal format
-		DCMGLTextureChannelFormat format = DCMGLTextureChannelFormat::RGBA;
+		// Internal texture GL format
+		GLint internal_format;
 
-		// Pixel data format
-		DCMGLTextureDataFormat data_format = DCMGLTextureDataFormat::UByte;
+		// Texture GL format
+		GLenum format;
+
+		// Pixel data type
+		GLenum type;
 
 		// Texture dimensions (leave at zero if a path is specified)
 		int width = 0;

@@ -32,9 +32,6 @@ void dcm::DCMGLTexture2D::CreateTexture(DCMGLTexture2DInfo& create_info)
 		}
 	}
 
-	// Get the OpenGL base format to store the texture in (used for pixel data)
-	DCMGLTextureChannelFormat base_format = SizedFormatToBaseFormat(create_info.format);
-
 	glGenTextures(1, &m_texture_handle);
 	glBindTexture(GL_TEXTURE_2D, m_texture_handle);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, static_cast<GLint>(create_info.wrap_s));
@@ -44,12 +41,12 @@ void dcm::DCMGLTexture2D::CreateTexture(DCMGLTexture2DInfo& create_info)
 	glTexImage2D(
 		GL_TEXTURE_2D,
 		0,
-		static_cast<GLint>(create_info.format),
+		create_info.internal_format,
 		create_info.width,
 		create_info.height,
 		0,
-		static_cast<GLenum>(base_format),
-		static_cast<GLenum>(create_info.data_format),
+		create_info.format,
+		create_info.type,
 		data);
 
 	// Unbind to ensure the OpenGL state machine has been reset to a "default" value
@@ -61,7 +58,10 @@ void dcm::DCMGLTexture2D::CreateTexture(DCMGLTexture2DInfo& create_info)
 		stbi_image_free(&data);
 	}
 
-	spdlog::info("Successfully loaded 2D texture: {}", create_info.path->data());
+	if (!create_info.path->empty())
+	{
+		spdlog::info("Successfully loaded 2D texture: {}", create_info.path->data());
+	}
 }
 
 void dcm::DCMGLTexture2D::Bind() const

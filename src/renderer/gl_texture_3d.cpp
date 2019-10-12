@@ -6,6 +6,9 @@
 // Spdlog
 #include <spdlog/spdlog.h>
 
+// C++ standard
+#include <fstream>
+
 dcm::DCMGLTexture3D::DCMGLTexture3D() :
 	m_texture_handle(0),
 	m_destroyed(false)
@@ -25,11 +28,14 @@ void dcm::DCMGLTexture3D::CreateTextureFromImageSlices(const DCMGLTexture3DInfo&
 		return;
 	}
 
-	// Number of bytes required to store a 2D slice
-	std::uint32_t slice_size_bytes = DCMGLFormatToBytesPerPixel(create_info.channel_format, create_info.data_format);
+	// Number of bytes required to store a pixel
+	std::uint32_t slice_bytes_per_pixel = FormatToBytesPerPixel(create_info.internal_format);
+
+	// Size of a single 2D slice
+	std::uint32_t slice_size_bytes = slice_bytes_per_pixel * create_info.slice_width * create_info.slice_height;
 
 	// Needed to store N 2D slices in memory (size of the 3D texture)
-	unsigned char* const volume_data = new unsigned char[slice_size_bytes * create_info.slice_width * create_info.slice_height];
+	unsigned char* const volume_data = new unsigned char[slice_bytes_per_pixel * slice_size_bytes * create_info.paths.size()];
 
 	// Load each 2D slice and copy it to the volume data blob
 	for (std::uint32_t i = 0; i < create_info.paths.size(); ++i)
@@ -69,19 +75,94 @@ void dcm::DCMGLTexture3D::CreateTextureFromImageSlices(const DCMGLTexture3DInfo&
 	glTexImage3D(
 		GL_TEXTURE_3D,
 		0,
-		static_cast<GLint>(create_info.channel_format),
+		create_info.internal_format,
 		create_info.slice_width,
 		create_info.slice_height,
 		static_cast<GLsizei>(create_info.paths.size()),
 		0,
-		static_cast<GLenum>(SizedFormatToBaseFormat(create_info.channel_format)),
-		static_cast<GLenum>(create_info.data_format),
+		create_info.format,
+		create_info.type,
 		volume_data);
 
 	// Clean-up the pixel data
 	delete[] volume_data;
 
-	spdlog::info("Successfully loaded 3D texture from 2D slices.");
+	spdlog::info("Successfully loaded 3D texture from 2D image slices.");
+}
+
+void dcm::DCMGLTexture3D::CreateTextureFromDataSlices(const DCMGLTexture3DInfo& create_info)
+{
+	if (0 == create_info.paths.size())
+	{
+		spdlog::error("Cannot create a 3D texture without any slices.");
+		return;
+	}
+
+	// Number of bytes required to store a pixel
+	std::uint32_t slice_bytes_per_pixel = FormatToBytesPerPixel(create_info.internal_format);
+
+	// Size of a single 2D slice
+	std::uint32_t slice_size_bytes = slice_bytes_per_pixel * create_info.slice_width * create_info.slice_height;
+
+	// Needed to store N 2D slices in memory (size of the 3D texture)
+	unsigned char* const volume_data = new unsigned char[slice_bytes_per_pixel * slice_size_bytes * create_info.paths.size()];
+
+	// Load each 2D slice and copy it to the volume data blob
+	for (std::uint32_t i = 0; i < create_info.paths.size(); ++i)
+	{
+		std::string_view path = create_info.paths[i];
+
+		std::ifstream file(path.data(), std::ios_base::binary);
+
+		if (!file)
+		{
+			file.close();
+			delete[] volume_data;
+			spdlog::error("Unable to load binary slice data.");
+			return;
+		}
+
+		char* data = new char[slice_size_bytes];
+
+		// Read the entire slice
+		file.seekg(0);
+		file.read(&data[0], slice_size_bytes);
+
+		// Copy the slice to the volumetric data blob
+		memcpy(&volume_data[i * slice_size_bytes], data, slice_size_bytes);
+
+		// Clean-up
+		delete[] data;
+		file.close();
+	}
+
+	// Create the 3D texture
+	glGenTextures(1, &m_texture_handle);
+	glBindTexture(GL_TEXTURE_3D, m_texture_handle);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexImage3D(
+		GL_TEXTURE_3D,
+		0,
+		create_info.internal_format,
+		create_info.slice_width,
+		create_info.slice_height,
+		static_cast<GLsizei>(create_info.paths.size()),
+		0,
+		create_info.format,
+		create_info.type,
+		volume_data);
+
+	// Unbind to avoid leaving the state machine in a state
+	glBindTexture(GL_TEXTURE_3D, 0);
+
+	// Clean-up the pixel data
+	delete[] volume_data;
+
+	spdlog::info("Successfully loaded 3D texture from 2D image slices.");
 }
 
 void dcm::DCMGLTexture3D::Bind() const
