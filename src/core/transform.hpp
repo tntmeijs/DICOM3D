@@ -27,9 +27,6 @@ namespace dcm
 		// Get the world matrix
 		glm::mat4 GetWorldMatrix() const;
 
-		// Orient the transform to look at the target position
-		void LookAtTarget(const glm::vec3& target);
-
 	public:
 		glm::vec3 position;
 		glm::vec3 scale;

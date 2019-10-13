@@ -41,13 +41,3 @@ glm::mat4 dcm::DCMTransform::GetWorldMatrix() const
 	return m_world_matrix;
 	return glm::translate(position) * glm::toMat4(rotation) * glm::scale(scale);
 }
-
-void dcm::DCMTransform::LookAtTarget(const glm::vec3& target)
-{
-	glm::mat4 look_at = glm::lookAtLH(position, target, up);
-
-	// Extract the directional vectors from the newly constructed look-at matrix
-	right	= { look_at[0][0], look_at[0][1], look_at[0][2] };
-	up		= { look_at[1][0], look_at[1][1], look_at[1][2] };
-	forward	= { look_at[2][0], look_at[2][1], look_at[2][2] };
-}

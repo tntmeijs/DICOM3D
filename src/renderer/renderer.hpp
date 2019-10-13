@@ -4,6 +4,7 @@
 #include "gl_shader.hpp"
 #include "gl_texture_2d.hpp"
 #include "gl_texture_3d.hpp"
+#include "core/transform.hpp"
 
 // Spdlog
 #include "spdlog/spdlog.h"
@@ -26,6 +27,11 @@ namespace dcm
 		 * Initialize OpenGL
 		 */
 		void Initialize(int initial_width, int initial_height, int gl_major, int gl_minor);
+
+		/**
+		 * Update the scene
+		 */
+		void Update(double delta_time);
 
 		/**
 		 * Render the scene
@@ -51,6 +57,12 @@ namespace dcm
 
 		// Dummy VAO needed to make the "fullscreen triangle without buffers" trick work
 		GLuint m_dummy_vao;
+
+		// Camera transform
+		DCMTransform m_camera_transform;
+
+		// Raymarching volume transform
+		DCMTransform m_volume_transform;
 
 		DCMGLShader m_volumetric_shader;
 		DCMGLShader m_fullscreen_triangle_shader;

@@ -42,6 +42,7 @@ int main()
 	// Main loop
 	while (window.IsRunning())
 	{
+		renderer.Update(1.0);
 		renderer.DrawFrame();
 		window.NextFrame();
 	}
