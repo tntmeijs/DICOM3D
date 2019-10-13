@@ -10,6 +10,20 @@ bool sphereHit(vec3 ray, vec3 position, float radius)
     return distance(position, ray) < radius;
 }
 
+bool IntersectBox(vec3 orig, vec3 dir, vec3 box_max, vec3 box_min)
+{
+   vec3 tmin = (box_min - orig)/dir;
+   vec3 tmax = (box_max - orig)/dir;
+   
+   vec3 real_min = min(tmin, tmax);
+   vec3 real_max = max(tmin, tmax);
+   
+   float minmax = min( min(real_max.x, real_max.y), real_max.z);
+   float maxmin = max( max(real_min.x, real_min.y), real_min.z);
+
+   return (minmax >= maxmin);
+}
+
 void main()
 {
     // Pixel position in texture pixels
@@ -37,6 +51,12 @@ void main()
 
     for (int i = 0; i < 64; ++i)
     {
+        if (IntersectBox(ray_origin, ray_origin + (view_dir * (i * 0.01)) + vec3(uv, 0.0), vec3(0, 0, 2), vec3(2, 2, 4)))
+        {
+            output_color.b = i / 64.0;
+            break;
+        }
+
         if (sphereHit(ray_origin, sphere_pos, sphere_radius))
         {
             output_color.b = i / 64.0;
