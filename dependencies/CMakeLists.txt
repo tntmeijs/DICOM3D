@@ -19,6 +19,9 @@ add_subdirectory(spdlog)
 target_link_libraries(${PROJECT_NAME} spdlog)
 target_include_directories(${PROJECT_NAME} PRIVATE spdlog)
 
+# GLM
+target_include_directories(${PROJECT_NAME} PRIVATE glm)
+
 # STB
 target_include_directories(${PROJECT_NAME} PRIVATE stb)
 
