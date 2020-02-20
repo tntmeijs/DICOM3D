@@ -61,9 +61,6 @@ namespace dcm
 		// Camera transform
 		DCMTransform m_camera_transform;
 
-		// Raymarching volume transform
-		DCMTransform m_volume_transform;
-
 		DCMGLShader m_volumetric_shader;
 		DCMGLShader m_fullscreen_triangle_shader;
 	};

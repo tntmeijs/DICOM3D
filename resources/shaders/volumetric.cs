@@ -10,10 +10,10 @@ layout(location = 4) uniform vec3 volume_box_maximum;
 
 layout(local_size_x = 16, local_size_y = 16, local_size_z = 1) in;
 
-bool IntersectBox(vec3 orig, vec3 dir, vec3 box_max, vec3 box_min)
+bool IntersectBox(vec3 orig, vec3 dir, vec3 box_max, vec3 box_min, out vec3 tmin, out vec3 tmax)
 {
-   vec3 tmin = (box_min - orig)/dir;
-   vec3 tmax = (box_max - orig)/dir;
+   tmin = (box_min - orig)/dir;
+   tmax = (box_max - orig)/dir;
    
    vec3 real_min = min(tmin, tmax);
    vec3 real_max = max(tmin, tmax);
@@ -22,11 +22,6 @@ bool IntersectBox(vec3 orig, vec3 dir, vec3 box_max, vec3 box_min)
    float maxmin = max( max(real_min.x, real_min.y), real_min.z);
 
    return (minmax >= maxmin);
-}
-
-float distSphere(vec3 p, float radius)
-{
-    return length(p) - radius;
 }
 
 float sdTorus(vec3 p, vec2 t)
@@ -40,22 +35,25 @@ vec3 MarchVolume(vec3 ray_origin, vec3 ray_direction)
     vec3 color = vec3(0.0, 0.0, 0.0);
     float distance = 0.0;
 
-    const float MAX_DIST = 100.0;
+    const float MAX_DIST = 1500.0;
+    const float STEP_SIZE = 0.1;
 
     while (distance < MAX_DIST)
     {
         vec3 ray_end = ray_origin + (ray_direction * distance);
 
-        if (sdTorus(ray_end, vec2(1.0, 0.25)) < 0.001)
+        color.r = sdTorus(ray_end, vec2(100.0, 25)) / MAX_DIST;
+
+        if (sdTorus(ray_end, vec2(100.0, 25.0)) < 0.001)
         {
             // Hit!
-            color.g = distance / MAX_DIST * 2.0;
-            color.b = distance / MAX_DIST * 2.0;
+            color.g = distance / MAX_DIST * 0.5f;
+            color.b = distance / MAX_DIST * 0.5f;
             break;
         }
 
         // March along the ray
-        distance += 0.01;
+        distance += STEP_SIZE;
     }
 
     return color;
@@ -80,10 +78,16 @@ void main()
     // Pixel color
     vec3 output_color = vec3(0.0, 0.0, 0.0);
 
+    // Ray-box intersection entry
+    vec3 ray_entry;
+
+    // Ray-box intersection exit
+    vec3 ray_exit;
+
     // Only march when the ray is actually going to hit the volume
-    if (IntersectBox(ray_origin, ray_direction, volume_box_minimum, volume_box_maximum))
+    if (IntersectBox(ray_origin, ray_direction, volume_box_minimum, volume_box_maximum, ray_entry, ray_exit))
     {
-        // TODO: add intersection position to ray_origin to avoid stepping through much empty space
+        // Start marching right at the start of the box
 
         // Start marching along the ray
         output_color = MarchVolume(ray_origin, ray_direction);

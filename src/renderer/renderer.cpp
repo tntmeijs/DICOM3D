@@ -196,10 +196,6 @@ void dcm::DCMRenderer::Initialize(int initial_width, int initial_height, int gl_
 		// The volume is 256x256x109 voxels
 		debug_box.minimum = { -128.0f, -128.0f, -54.5f };
 		debug_box.maximum = {  128.0f,  128.0f,  54.5f };
-
-		// Make the volume fit nicely in the view, no need to make one unit to be one voxel
-		// According to the dataset information, the Z axis should be stretched by a factor of two. 
-		m_volume_transform.scale = { 0.01f, 0.01f, 0.02f };
 	}
 
 	// Dummy VAO
@@ -209,13 +205,17 @@ void dcm::DCMRenderer::Initialize(int initial_width, int initial_height, int gl_
 void dcm::DCMRenderer::Update(double delta_time)
 {
 	static float f = 0.0f;
-	f += 0.005f;
+	f += 0.01f;
 
-	m_camera_transform.position.y = 3.0f;
-	m_camera_transform.position.z = -10.0f;
+	//m_camera_transform.position.y = 750.0f;
+	m_camera_transform.position.x = cos(f) * 1000.0f;
+	m_camera_transform.position.y = 750.0f;
+	m_camera_transform.position.z = sin(f) * 1000.0f;
+
+	// Always keep the volume in the center
+	m_camera_transform.LookAtTarget({ 0.0f, 0.0f, 0.0f });
 
 	m_camera_transform.Update();
-	m_volume_transform.Update();
 }
 
 void dcm::DCMRenderer::DrawFrame() const
@@ -231,12 +231,8 @@ void dcm::DCMRenderer::DrawFrame() const
 	glUniform3fv(glGetUniformLocation(m_volumetric_shader.Handle(), "camera_view_direction"), 1, &m_camera_transform.forward[0]);
 
 	// Volumetric transform data
-	glm::vec3 box_min, box_max;
-	glm::mat4 volume_world_matrix = m_volume_transform.GetWorldMatrix();
-	box_min = volume_world_matrix * glm::vec4(debug_box.minimum, 1.0f);
-	box_max = volume_world_matrix * glm::vec4(debug_box.maximum, 1.0f);
-	glUniform3fv(glGetUniformLocation(m_volumetric_shader.Handle(), "volume_box_minimum"), 1, &box_min[0]);
-	glUniform3fv(glGetUniformLocation(m_volumetric_shader.Handle(), "volume_box_maximum"), 1, &box_max[0]);
+	glUniform3fv(glGetUniformLocation(m_volumetric_shader.Handle(), "volume_box_minimum"), 1, &debug_box.minimum[0]);
+	glUniform3fv(glGetUniformLocation(m_volumetric_shader.Handle(), "volume_box_maximum"), 1, &debug_box.maximum[0]);
 
 	// Output
 	glBindImageTexture(0, m_volumetric_output_texture.Handle(), 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);

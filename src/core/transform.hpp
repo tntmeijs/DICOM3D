@@ -24,23 +24,19 @@ namespace dcm
 		// Set the rotation in Euler angles (degrees)
 		void SetRotationEulerAngles(float angle, const glm::vec3& axis);
 
-		// Get the world matrix
-		glm::mat4 GetWorldMatrix() const;
+		// Set the rotation in Euler angles (agrees)
+		void SetRotationEulerAngles(float x, float y, float z);
+
+		// Rotate the transform to look at the specified position
+		void LookAtTarget(const glm::vec3& target);
 
 	public:
 		glm::vec3 position;
-		glm::vec3 scale;
 		glm::quat rotation;
 
 		glm::vec3 up;
 		glm::vec3 forward;
 		glm::vec3 right;
-
-	private:
-		glm::mat4 m_world_matrix;
-		glm::mat4 m_rotation_matrix;
-		glm::mat4 m_translation_matrix;
-		glm::mat4 m_scale_matrix;
 	};
 }
 
