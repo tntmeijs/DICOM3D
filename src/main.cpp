@@ -8,6 +8,10 @@
 // Core
 #include "core/window.hpp"
 
+#ifdef WIN32
+#include "core/directory_watcher_windows.hpp"
+#endif
+
 // Renderer
 #include "renderer/renderer.hpp"
 
@@ -20,6 +24,11 @@ int main()
 {
 	dcm::DCMRenderer renderer;
 	dcm::DCMWindow window;
+
+#ifdef WIN32
+	dcm::DCMDirectoryWatcherWindows win_directory_watcher("./resources");
+	win_directory_watcher.StartWatching();
+#endif
 
 	glfwInit();
 
