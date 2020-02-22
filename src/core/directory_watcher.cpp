@@ -1,4 +1,4 @@
-#include "directory_watcher_windows.hpp"
+#include "directory_watcher.hpp"
 
 // Spdlog
 #include "spdlog/spdlog.h"
@@ -7,19 +7,19 @@
 #include <cstdint>
 #include <iostream>
 
-dcm::DCMDirectoryWatcherWindows::DCMDirectoryWatcherWindows(std::string_view directory, std::uint32_t scan_interval) :
+dcm::DCMDirectoryWatcher::DCMDirectoryWatcher(std::string_view directory, std::uint32_t scan_interval) :
 	m_is_listening(true),
 	m_directory_to_monitor(directory),
 	m_scan_interval(scan_interval)
 {
 }
 
-dcm::DCMDirectoryWatcherWindows::~DCMDirectoryWatcherWindows()
+dcm::DCMDirectoryWatcher::~DCMDirectoryWatcher()
 {
 	StopWatching();
 }
 
-bool dcm::DCMDirectoryWatcherWindows::StartWatching()
+bool dcm::DCMDirectoryWatcher::StartWatching()
 {
 	auto monitoring_loop = [&]()
 	{
@@ -36,7 +36,15 @@ bool dcm::DCMDirectoryWatcherWindows::StartWatching()
 	return true;
 }
 
-void dcm::DCMDirectoryWatcherWindows::RefreshDirectoryTree(const std::filesystem::path& path)
+void dcm::DCMDirectoryWatcher::RegisterFileChangeNotification(const OnDCMFileSystemChange& functor)
+{
+}
+
+void dcm::DCMDirectoryWatcher::RegisterFileDeleteNotification(const OnDCMFileSystemChange& functor)
+{
+}
+
+void dcm::DCMDirectoryWatcher::RefreshDirectoryTree(const std::filesystem::path& path)
 {
 	if (std::filesystem::exists(path) && std::filesystem::is_directory(path))
 	{
@@ -56,24 +64,37 @@ void dcm::DCMDirectoryWatcherWindows::RefreshDirectoryTree(const std::filesystem
 				{
 					auto absolute_path = std::filesystem::absolute(entry.path());
 					auto last_modified = std::filesystem::last_write_time(entry.path());
+					auto absolute_path_name = absolute_path.generic_string();
 
-					auto result = m_file_list.find(absolute_path.generic_string());
+					auto result = m_file_list.find(absolute_path_name);
 
 					if (result == m_file_list.end())
 					{
 						// File did not exist, add it to the map
-						m_file_list.insert({ absolute_path.generic_string(), last_modified });
+						m_file_list.insert({ absolute_path_name, last_modified });
 
-						std::cout << "Discovered file: " << absolute_path << std::endl;
+						for (const auto& functor : m_create_callbacks)
+						{
+							if (functor)
+							{
+								functor(absolute_path_name, last_modified);
+							}
+						}
 					}
 					else
 					{
 						// File still exists, update the timestamp if the current timestamp is newer
 						if (result->second != last_modified)
 						{
-							m_file_list[absolute_path.generic_string()] = last_modified;
+							m_file_list[absolute_path_name] = last_modified;
 
-							std::cout << "Updated file: " << absolute_path << std::endl;
+							for (const auto& functor : m_change_callbacks)
+							{
+								if (functor)
+								{
+									functor(absolute_path_name, last_modified);
+								}
+							}
 						}
 					}
 
@@ -91,7 +112,14 @@ void dcm::DCMDirectoryWatcherWindows::RefreshDirectoryTree(const std::filesystem
 					for (const auto& outdated : keys_to_remove)
 					{
 						m_file_list.erase(outdated);
-						std::cout << outdated << " has been removed from the filesystem" << std::endl;
+
+						for (const auto& functor : m_delete_callbacks)
+						{
+							if (functor)
+							{
+								functor(outdated, last_modified);
+							}
+						}
 					}
 				}
 			}
@@ -99,7 +127,7 @@ void dcm::DCMDirectoryWatcherWindows::RefreshDirectoryTree(const std::filesystem
 	}
 }
 
-void dcm::DCMDirectoryWatcherWindows::StopWatching()
+void dcm::DCMDirectoryWatcher::StopWatching()
 {
 	if (m_is_listening)
 	{
@@ -110,4 +138,8 @@ void dcm::DCMDirectoryWatcherWindows::StopWatching()
 
 		m_monitoring_thread.join();
 	}
+}
+
+void dcm::DCMDirectoryWatcher::RegisterFileCreateNotification(const OnDCMFileSystemChange& functor)
+{
 }

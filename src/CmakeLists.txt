@@ -5,8 +5,8 @@ set(CORE_SOURCES
     core/window.hpp
     core/transform.cpp
     core/transform.hpp
-    core/directory_watcher_windows.cpp
-    core/directory_watcher_windows.hpp)
+    core/directory_watcher.cpp
+    core/directory_watcher.hpp)
 
 set(RENDERER_SOURCES
     renderer/renderer.cpp

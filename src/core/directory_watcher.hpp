@@ -1,10 +1,11 @@
-#ifndef DICOM3D_DIRECTORY_WATCHER_WINDOWS_HPP
-#define DICOM3D_DIRECTORY_WATCHER_WINDOWS_HPP
+#ifndef DICOM3D_DIRECTORY_WATCHER_HPP
+#define DICOM3D_DIRECTORY_WATCHER_HPP
 
 // C++ standard
 #include <atomic>
 #include <chrono>
 #include <filesystem>
+#include <functional>
 #include <mutex>
 #include <string_view>
 #include <string>
@@ -15,10 +16,13 @@
 namespace dcm
 {
 	/**
-	 * Windows-only class used to monitor file and directory changes
+	 * Class used to monitor file and directory changes
 	 */
-	class DCMDirectoryWatcherWindows
+	class DCMDirectoryWatcher
 	{
+	public:
+		using OnDCMFileSystemChange = std::function<void(std::string, std::filesystem::file_time_type)>;
+
 	public:
 		/**
 		 * Create a new directory watcher and start monitoring the specified directory for changes
@@ -29,14 +33,14 @@ namespace dcm
 		 * @param scan_interval		The interval in milliseconds between directory scans
 		 * @sa						StartWatching
 		 */
-		DCMDirectoryWatcherWindows(std::string_view directory, std::uint32_t scan_interval);
+		DCMDirectoryWatcher(std::string_view directory, std::uint32_t scan_interval);
 		
-		DCMDirectoryWatcherWindows(const DCMDirectoryWatcherWindows& other) = delete;
+		DCMDirectoryWatcher(const DCMDirectoryWatcher& other) = delete;
 
 		/**
 		 * Closes all open handles and stops the directory watching logic
 		 */
-		~DCMDirectoryWatcherWindows();
+		~DCMDirectoryWatcher();
 
 		/**
 		 * Start monitoring all subdirectories for folder and file changes
@@ -50,8 +54,26 @@ namespace dcm
 		 */
 		void StopWatching();
 
-	public:
-		//#TODO: Add callbacks here whenever the file system updates!
+		/**
+		 * Register a callback to the file created event
+		 *
+		 * @param functor	The callback function to call when a file is created
+		 */
+		void RegisterFileCreateNotification(const OnDCMFileSystemChange& functor);
+
+		/**
+		 * Register a callback to the file created event
+		 *
+		 * @param functor	The callback function to call when a file is changed
+		 */
+		void RegisterFileChangeNotification(const OnDCMFileSystemChange& functor);
+
+		/**
+		 * Register a callback to the file created event
+		 *
+		 * @param functor	The callback function to call when a file is removed from the filesystem
+		 */
+		void RegisterFileDeleteNotification(const OnDCMFileSystemChange& functor);
 
 	private:
 		/**
@@ -77,6 +99,15 @@ namespace dcm
 		/** List of all files and their last modified timestamp */
 		std::unordered_map<std::string, std::filesystem::file_time_type> m_file_list;
 		std::mutex m_file_list_mutex;
+
+		/** Callbacks registered to file create events */
+		std::vector<OnDCMFileSystemChange> m_create_callbacks;
+
+		/** Callbacks registered to file change events */
+		std::vector<OnDCMFileSystemChange> m_change_callbacks;
+
+		/** Callbacks registered to file delete events */
+		std::vector<OnDCMFileSystemChange> m_delete_callbacks;
 	};
 }
 

@@ -6,11 +6,8 @@
 #include "stb_defines.hpp"
 
 // Core
+#include "core/directory_watcher.hpp"
 #include "core/window.hpp"
-
-#ifdef WIN32
-#include "core/directory_watcher_windows.hpp"
-#endif
 
 // Renderer
 #include "renderer/renderer.hpp"
@@ -26,10 +23,8 @@ int main()
 	dcm::DCMRenderer renderer;
 	dcm::DCMWindow window;
 
-#ifdef WIN32
-	dcm::DCMDirectoryWatcherWindows win_directory_watcher("./resources", DIRECTORY_FILE_CHANGE_SCAN_INTERVAL_MILLISECONDS);
-	win_directory_watcher.StartWatching();
-#endif
+	dcm::DCMDirectoryWatcher directory_watcher("./resources", DIRECTORY_FILE_CHANGE_SCAN_INTERVAL_MILLISECONDS);
+	directory_watcher.StartWatching();
 
 	glfwInit();
 
