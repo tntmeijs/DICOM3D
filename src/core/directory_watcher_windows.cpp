@@ -5,13 +5,12 @@
 
 // C++ standard
 #include <cstdint>
+#include <iostream>
 
-dcm::DCMDirectoryWatcherWindows::DCMDirectoryWatcherWindows(std::string_view directory) :
-	m_file_folder_updated_handle(INVALID_HANDLE_VALUE),
-	m_file_renamed_handle(INVALID_HANDLE_VALUE),
-	m_folder_renamed_handle(INVALID_HANDLE_VALUE),
+dcm::DCMDirectoryWatcherWindows::DCMDirectoryWatcherWindows(std::string_view directory, std::uint32_t scan_interval) :
 	m_is_listening(true),
-	m_directory_to_monitor(directory)
+	m_directory_to_monitor(directory),
+	m_scan_interval(scan_interval)
 {
 }
 
@@ -22,55 +21,12 @@ dcm::DCMDirectoryWatcherWindows::~DCMDirectoryWatcherWindows()
 
 bool dcm::DCMDirectoryWatcherWindows::StartWatching()
 {
-	m_file_folder_updated_handle	= FindFirstChangeNotification(m_directory_to_monitor.c_str(), true, FILE_NOTIFY_CHANGE_LAST_WRITE);
-	m_file_renamed_handle			= FindFirstChangeNotification(m_directory_to_monitor.c_str(), true, FILE_NOTIFY_CHANGE_FILE_NAME);
-	m_folder_renamed_handle			= FindFirstChangeNotification(m_directory_to_monitor.c_str(), true, FILE_NOTIFY_CHANGE_DIR_NAME);
-
-	if (m_file_folder_updated_handle	== INVALID_HANDLE_VALUE ||
-		m_file_renamed_handle			== INVALID_HANDLE_VALUE ||
-		m_folder_renamed_handle			== INVALID_HANDLE_VALUE)
-	{
-		spdlog::critical("Unable to create monitoring handles for the directory.");
-		return false;
-	}
-	else
-	{
-		spdlog::info("Directory monitoring handles set.");
-	}
-
 	auto monitoring_loop = [&]()
 	{
-		HANDLE handles[] =
-		{
-			m_file_folder_updated_handle,	// WAIT_OBJECT_0
-			m_file_renamed_handle,			// WAIT_OBJECT_0 + 1
-			m_folder_renamed_handle			// WAIT_OBJECT_0 + 2
-		};
-
-		std::uint32_t handle_count = sizeof(handles) / sizeof(HANDLE);
-
 		while (m_is_listening)
 		{
-			// Wait until a signal comes through
-			DWORD wait_status = WaitForMultipleObjects(4, handles, false, INFINITE);
-
-			switch (wait_status)
-			{
-			case WAIT_OBJECT_0:
-				UpdateDirectoryListing(DCMDirectoryUpdateType::FileFolderUpdated, m_file_folder_updated_handle);
-				break;
-
-			case WAIT_OBJECT_0 + 1:
-				UpdateDirectoryListing(DCMDirectoryUpdateType::FileRenamed, m_file_renamed_handle);
-				break;
-
-			case WAIT_OBJECT_0 + 2:
-				UpdateDirectoryListing(DCMDirectoryUpdateType::FolderRenamed, m_folder_renamed_handle);
-				break;
-
-			default:
-				break;
-			}
+			std::this_thread::sleep_for(std::chrono::milliseconds(m_scan_interval));
+			RefreshDirectoryTree(std::filesystem::path(m_directory_to_monitor));
 		}
 	};
 
@@ -80,30 +36,66 @@ bool dcm::DCMDirectoryWatcherWindows::StartWatching()
 	return true;
 }
 
-void dcm::DCMDirectoryWatcherWindows::UpdateDirectoryListing(DCMDirectoryUpdateType update_type, HANDLE& handle)
+void dcm::DCMDirectoryWatcherWindows::RefreshDirectoryTree(const std::filesystem::path& path)
 {
-	// Restart the notification
-	if (!FindNextChangeNotification(handle))
+	if (std::filesystem::exists(path) && std::filesystem::is_directory(path))
 	{
-		spdlog::critical("\"FindNextChangeNotification\" function failed, monitoring thread will now shut-down");
-		StopWatching();
-	}
+		for (const auto& entry : std::filesystem::directory_iterator(path))
+		{
+			if (std::filesystem::is_directory(entry.status()))
+			{
+				// Recurse into subdirectory
+				RefreshDirectoryTree(entry);
+			}
+			else if (std::filesystem::is_regular_file(entry.status()))
+			{
+				// This section will update the file list from a different thread, could be dangerous
+				std::lock_guard<std::mutex> lock(m_file_list_mutex);
 
-	// Handle the change
-	switch (update_type)
-	{
-	case dcm::DCMDirectoryWatcherWindows::DCMDirectoryUpdateType::FileFolderUpdated:
-		spdlog::info("file / folder updated");
-		break;
-	case dcm::DCMDirectoryWatcherWindows::DCMDirectoryUpdateType::FileRenamed:
-		spdlog::info("file renamed");
-		break;
-	case dcm::DCMDirectoryWatcherWindows::DCMDirectoryUpdateType::FolderRenamed:
-		spdlog::info("folder renamed");
-		break;
-	default:
-		spdlog::info("unknown operation");
-		break;
+				// Redundant but helps to show the critical section
+				{
+					auto absolute_path = std::filesystem::absolute(entry.path());
+					auto last_modified = std::filesystem::last_write_time(entry.path());
+
+					auto result = m_file_list.find(absolute_path.generic_string());
+
+					if (result == m_file_list.end())
+					{
+						// File did not exist, add it to the map
+						m_file_list.insert({ absolute_path.generic_string(), last_modified });
+
+						std::cout << "Discovered file: " << absolute_path << std::endl;
+					}
+					else
+					{
+						// File still exists, update the timestamp if the current timestamp is newer
+						if (result->second != last_modified)
+						{
+							m_file_list[absolute_path.generic_string()] = last_modified;
+
+							std::cout << "Updated file: " << absolute_path << std::endl;
+						}
+					}
+
+					// Mark files for delete (cannot remove items from the directory that is being iterated over)
+					std::vector<std::string> keys_to_remove;
+					for (const auto& file_ref : m_file_list)
+					{
+						if (!std::filesystem::exists(file_ref.first))
+						{
+							keys_to_remove.push_back(file_ref.first);
+						}
+					}
+
+					// Remove old references
+					for (const auto& outdated : keys_to_remove)
+					{
+						m_file_list.erase(outdated);
+						std::cout << outdated << " has been removed from the filesystem" << std::endl;
+					}
+				}
+			}
+		}
 	}
 }
 

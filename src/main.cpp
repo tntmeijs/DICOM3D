@@ -19,6 +19,7 @@ constexpr int VERSION_MAJOR = 4;
 constexpr int VERSION_MINOR = 6;
 constexpr int DEFAULT_WINDOW_WIDTH = 1280;
 constexpr int DEFAULT_WINDOW_HEIGHT = 720;
+constexpr int DIRECTORY_FILE_CHANGE_SCAN_INTERVAL_MILLISECONDS = 1000;
 
 int main()
 {
@@ -26,7 +27,7 @@ int main()
 	dcm::DCMWindow window;
 
 #ifdef WIN32
-	dcm::DCMDirectoryWatcherWindows win_directory_watcher("./resources");
+	dcm::DCMDirectoryWatcherWindows win_directory_watcher("./resources", DIRECTORY_FILE_CHANGE_SCAN_INTERVAL_MILLISECONDS);
 	win_directory_watcher.StartWatching();
 #endif
 
