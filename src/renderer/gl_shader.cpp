@@ -4,12 +4,16 @@
 #include <spdlog/spdlog.h>
 
 // C++ standard
+#include <algorithm>
+#include <filesystem>
 #include <fstream>
 #include <string>
 
-dcm::DCMGLShader::DCMGLShader() :
+dcm::DCMGLShader::DCMGLShader(const std::vector<std::string_view>& shader_sources) :
 	m_program_handle(0),
-	m_destroyed(false)
+	m_is_outdated(true),
+	m_destroyed(false),
+	m_shader_sources(shader_sources)
 {
 }
 
@@ -18,12 +22,12 @@ dcm::DCMGLShader::~DCMGLShader()
 	Destroy();
 }
 
-void dcm::DCMGLShader::Create(const std::vector<std::string_view>& shader_sources)
+void dcm::DCMGLShader::Create()
 {
 	// Handles to the shaders that will be created in the for-loop down below
-	std::vector<GLuint> shader_handles(shader_sources.size());
+	std::vector<GLuint> shader_handles;
 
-	for (const auto& source : shader_sources)
+	for (const auto& source : m_shader_sources)
 	{
 		// Extract information about this shader
 		std::string extension = source.substr(source.find_last_of('.') + 1).data();
@@ -46,8 +50,36 @@ void dcm::DCMGLShader::Create(const std::vector<std::string_view>& shader_source
 	}
 }
 
-void dcm::DCMGLShader::Use() const
+#ifdef _DEBUG
+void dcm::DCMGLShader::StartHotReload(DCMDirectoryWatcher& directory_watcher)
 {
+	directory_watcher.RegisterFileChangeNotification([&](std::string_view file)
+		{
+			// Did one of the shader source change?
+			for (const auto source : m_shader_sources)
+			{
+				auto shader_path = std::filesystem::path(source);
+
+				if (std::filesystem::equivalent(file, shader_path))
+				{
+					m_is_outdated = true;
+				}
+			}
+		});
+}
+#endif
+
+void dcm::DCMGLShader::Use()
+{
+#ifdef _DEBUG
+	// Reload shader
+	if (m_is_outdated)
+	{
+		Create();
+		m_is_outdated = false;
+	}
+#endif
+
 	glUseProgram(m_program_handle);
 }
 
@@ -132,36 +164,39 @@ GLuint dcm::DCMGLShader::CreateShaderFromSource(std::string_view source_code, DC
 
 void dcm::DCMGLShader::CreateShaderProgram(const std::vector<GLuint>& handles)
 {
-	m_program_handle = glCreateProgram();
+	GLuint program_handle = glCreateProgram();
 
 	// Attach the specified shaders to the program
 	for (GLuint handle : handles)
 	{
-		glAttachShader(m_program_handle, handle);
+		glAttachShader(program_handle, handle);
 	}
 
 	// Link the program
-	glLinkProgram(m_program_handle);
+	glLinkProgram(program_handle);
 
 	// Check for any issues
 	GLint success = 0;
-	glGetProgramiv(m_program_handle, GL_LINK_STATUS, &success);
+	glGetProgramiv(program_handle, GL_LINK_STATUS, &success);
 
 	if (GL_FALSE == success)
 	{
 		GLint max_length = 0;
-		glGetProgramiv(m_program_handle, GL_INFO_LOG_LENGTH, &max_length);
+		glGetProgramiv(program_handle, GL_INFO_LOG_LENGTH, &max_length);
 
 		std::vector<GLchar> error_log(max_length);
-		glGetProgramInfoLog(m_program_handle, max_length, nullptr, error_log.data());
+		glGetProgramInfoLog(program_handle, max_length, nullptr, error_log.data());
 
 		spdlog::error("Program link error: {}", error_log.data());
 
 		// Do not leak the program
-		Destroy();
+		glDeleteProgram(program_handle);
 	}
 	else
 	{
 		spdlog::info("Program linked successfully.");
+
+		// Only replace the program handle when linking was successful
+		m_program_handle = program_handle;
 	}
 }

@@ -21,7 +21,7 @@ namespace dcm
 	class DCMDirectoryWatcher
 	{
 	public:
-		using OnDCMFileSystemChange = std::function<void(std::string, std::filesystem::file_time_type)>;
+		using OnDCMFileSystemChange = std::function<void(std::string_view)>;
 
 	public:
 		/**
@@ -44,10 +44,8 @@ namespace dcm
 
 		/**
 		 * Start monitoring all subdirectories for folder and file changes
-		 * 
-		 * @returns True on success, false on failure
 		 */
-		bool StartWatching();
+		void StartWatching();
 
 		/**
 		 * Stop monitoring the directory and close the thread

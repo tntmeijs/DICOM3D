@@ -5,6 +5,7 @@
 #include "gl_texture_2d.hpp"
 #include "gl_texture_3d.hpp"
 #include "core/transform.hpp"
+#include "core/directory_watcher.hpp"
 
 // Spdlog
 #include "spdlog/spdlog.h"
@@ -36,7 +37,7 @@ namespace dcm
 		/**
 		 * Render the scene
 		 */
-		void DrawFrame() const;
+		void DrawFrame();
 
 		/**
 		 * Clean-up resources
@@ -63,6 +64,9 @@ namespace dcm
 
 		DCMGLShader m_volumetric_shader;
 		DCMGLShader m_fullscreen_triangle_shader;
+
+		// Directory watcher is needed to monitor the shader files
+		DCMDirectoryWatcher m_directory_watcher;
 	};
 }
 

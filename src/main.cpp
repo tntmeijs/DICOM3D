@@ -6,7 +6,6 @@
 #include "stb_defines.hpp"
 
 // Core
-#include "core/directory_watcher.hpp"
 #include "core/window.hpp"
 
 // Renderer
@@ -14,17 +13,13 @@
 
 constexpr int VERSION_MAJOR = 4;
 constexpr int VERSION_MINOR = 6;
-constexpr int DEFAULT_WINDOW_WIDTH = 1280;
-constexpr int DEFAULT_WINDOW_HEIGHT = 720;
-constexpr int DIRECTORY_FILE_CHANGE_SCAN_INTERVAL_MILLISECONDS = 1000;
+constexpr int DEFAULT_WINDOW_WIDTH = 640;
+constexpr int DEFAULT_WINDOW_HEIGHT = 480;
 
 int main()
 {
 	dcm::DCMRenderer renderer;
 	dcm::DCMWindow window;
-
-	dcm::DCMDirectoryWatcher directory_watcher("./resources", DIRECTORY_FILE_CHANGE_SCAN_INTERVAL_MILLISECONDS);
-	directory_watcher.StartWatching();
 
 	glfwInit();
 

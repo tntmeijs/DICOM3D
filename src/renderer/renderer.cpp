@@ -1,4 +1,5 @@
 #include "renderer.hpp"
+#include "core/directory_watcher.hpp"
 
 // DEBUG: simple box structure for the raymarching
 struct Box
@@ -15,7 +16,10 @@ dcm::DCMRenderer::DCMRenderer() :
 	m_width(0),
 	m_height(0),
 	m_dummy_vao(0),
-	m_volumetric_output_texture()
+	m_volumetric_output_texture(),
+	m_volumetric_shader({ "./resources/shaders/volumetric.cs" }),
+	m_fullscreen_triangle_shader({ "./resources/shaders/fullscreen_triangle.vs", "./resources/shaders/fullscreen_triangle.fs" }),
+	m_directory_watcher("./resources", 1000)
 {
 }
 
@@ -49,11 +53,18 @@ void dcm::DCMRenderer::Initialize(int initial_width, int initial_height, int gl_
 	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
 	// Create the shader that will do the volumetric rendering
-	m_volumetric_shader.Create({ "./resources/shaders/volumetric.cs" });
+	m_volumetric_shader.Create();
 
 	// Create the full-screen output shader
-	m_fullscreen_triangle_shader.Create({ "./resources/shaders/fullscreen_triangle.vs", "./resources/shaders/fullscreen_triangle.fs" });
+	m_fullscreen_triangle_shader.Create();
 	glUniform1i(glGetUniformLocation(m_fullscreen_triangle_shader.Handle(), "volumetricResult"), 0);	// Bind to GL_TEXTURE0
+
+	// Enable hot reloading in debug mode
+#ifdef _DEBUG
+	m_directory_watcher.StartWatching();
+	m_volumetric_shader.StartHotReload(m_directory_watcher);
+	m_fullscreen_triangle_shader.StartHotReload(m_directory_watcher);
+#endif
 
 	// Create the volumetric compute shader output texture
 	{
@@ -218,7 +229,7 @@ void dcm::DCMRenderer::Update(double delta_time)
 	m_camera_transform.Update();
 }
 
-void dcm::DCMRenderer::DrawFrame() const
+void dcm::DCMRenderer::DrawFrame()
 {
 	constexpr int NUM_THREADS_X = 16;
 	constexpr int NUM_THREADS_Y = 16;

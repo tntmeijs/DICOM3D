@@ -5,7 +5,6 @@
 
 // C++ standard
 #include <cstdint>
-#include <iostream>
 
 dcm::DCMDirectoryWatcher::DCMDirectoryWatcher(std::string_view directory, std::uint32_t scan_interval) :
 	m_is_listening(true),
@@ -19,7 +18,7 @@ dcm::DCMDirectoryWatcher::~DCMDirectoryWatcher()
 	StopWatching();
 }
 
-bool dcm::DCMDirectoryWatcher::StartWatching()
+void dcm::DCMDirectoryWatcher::StartWatching()
 {
 	auto monitoring_loop = [&]()
 	{
@@ -32,16 +31,30 @@ bool dcm::DCMDirectoryWatcher::StartWatching()
 
 	// Spawn the monitoring thread
 	m_monitoring_thread = std::thread(monitoring_loop);
+}
 
-	return true;
+void dcm::DCMDirectoryWatcher::RegisterFileCreateNotification(const OnDCMFileSystemChange& functor)
+{
+	if (functor)
+	{
+		m_create_callbacks.push_back(functor);
+	}
 }
 
 void dcm::DCMDirectoryWatcher::RegisterFileChangeNotification(const OnDCMFileSystemChange& functor)
 {
+	if (functor)
+	{
+		m_change_callbacks.push_back(functor);
+	}
 }
 
 void dcm::DCMDirectoryWatcher::RegisterFileDeleteNotification(const OnDCMFileSystemChange& functor)
 {
+	if (functor)
+	{
+		m_delete_callbacks.push_back(functor);
+	}
 }
 
 void dcm::DCMDirectoryWatcher::RefreshDirectoryTree(const std::filesystem::path& path)
@@ -75,10 +88,7 @@ void dcm::DCMDirectoryWatcher::RefreshDirectoryTree(const std::filesystem::path&
 
 						for (const auto& functor : m_create_callbacks)
 						{
-							if (functor)
-							{
-								functor(absolute_path_name, last_modified);
-							}
+							functor(absolute_path_name);
 						}
 					}
 					else
@@ -90,10 +100,7 @@ void dcm::DCMDirectoryWatcher::RefreshDirectoryTree(const std::filesystem::path&
 
 							for (const auto& functor : m_change_callbacks)
 							{
-								if (functor)
-								{
-									functor(absolute_path_name, last_modified);
-								}
+								functor(absolute_path_name);
 							}
 						}
 					}
@@ -115,10 +122,7 @@ void dcm::DCMDirectoryWatcher::RefreshDirectoryTree(const std::filesystem::path&
 
 						for (const auto& functor : m_delete_callbacks)
 						{
-							if (functor)
-							{
-								functor(outdated, last_modified);
-							}
+							functor(outdated);
 						}
 					}
 				}
@@ -138,8 +142,4 @@ void dcm::DCMDirectoryWatcher::StopWatching()
 
 		m_monitoring_thread.join();
 	}
-}
-
-void dcm::DCMDirectoryWatcher::RegisterFileCreateNotification(const OnDCMFileSystemChange& functor)
-{
 }
