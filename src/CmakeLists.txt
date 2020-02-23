@@ -4,7 +4,9 @@ set(CORE_SOURCES
     core/window.cpp
     core/window.hpp
     core/transform.cpp
-    core/transform.hpp)
+    core/transform.hpp
+    core/directory_watcher.cpp
+    core/directory_watcher.hpp)
 
 set(RENDERER_SOURCES
     renderer/renderer.cpp

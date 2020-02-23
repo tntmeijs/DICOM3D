@@ -13,8 +13,8 @@
 
 constexpr int VERSION_MAJOR = 4;
 constexpr int VERSION_MINOR = 6;
-constexpr int DEFAULT_WINDOW_WIDTH = 1280;
-constexpr int DEFAULT_WINDOW_HEIGHT = 720;
+constexpr int DEFAULT_WINDOW_WIDTH = 640;
+constexpr int DEFAULT_WINDOW_HEIGHT = 480;
 
 int main()
 {
