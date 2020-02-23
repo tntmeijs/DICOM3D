@@ -1,6 +1,8 @@
 #include "renderer.hpp"
 #include "core/directory_watcher.hpp"
 
+#include <cmath>
+
 // DEBUG: simple box structure for the raymarching
 struct Box
 {
@@ -219,9 +221,8 @@ void dcm::DCMRenderer::Update(double delta_time)
 	f += 0.01f;
 
 	//m_camera_transform.position.y = 750.0f;
-	m_camera_transform.position.x = cos(f) * 1000.0f;
-	m_camera_transform.position.y = 750.0f;
-	m_camera_transform.position.z = sin(f) * 1000.0f;
+	m_camera_transform.position.x = cos(f) * 2.0f;
+	m_camera_transform.position.z = sin(f) * 2.0f;
 
 	// Always keep the volume in the center
 	m_camera_transform.LookAtTarget({ 0.0f, 0.0f, 0.0f });
@@ -253,7 +254,9 @@ void dcm::DCMRenderer::DrawFrame()
 	m_volumetric_texture_test.Bind();
 
 	// Render to output
-	glDispatchCompute(static_cast<GLuint>(ceil(m_width / NUM_THREADS_X)), static_cast<GLuint>(ceil(m_height / NUM_THREADS_Y)), 1);
+	GLuint dispatch_threads_x = static_cast<GLuint>(std::ceil(static_cast<float>(m_width) / static_cast<float>(NUM_THREADS_X)));
+	GLuint dispatch_thread_y = static_cast<GLuint>(std::ceil(static_cast<float>(m_height) / static_cast<float>(NUM_THREADS_Y)));
+	glDispatchCompute(dispatch_threads_x, dispatch_thread_y, 1);
 
 	// Wait for the compute shader to finish writing to the texture
 	glMemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
